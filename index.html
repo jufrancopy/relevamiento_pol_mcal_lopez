@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Equipos Informáticos - Policlínica Mcal López</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -18,25 +22,25 @@
             --gray: #6b7280;
             --white: #ffffff;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
             background-color: #f8fafc;
         }
-        
+
         .container {
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -45,35 +49,55 @@
             padding-bottom: 20px;
             border-bottom: 1px solid #e2e8f0;
         }
-        
+
         .logo {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .logo-icon {
             font-size: 2rem;
             color: var(--primary);
         }
-        
+
         .logo-text h1 {
             font-size: 1.5rem;
             color: var(--dark);
         }
-        
+
         .logo-text p {
             font-size: 0.875rem;
             color: var(--gray);
         }
-        
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background-color: var(--primary);
+            color: var(--white);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .action-button:hover {
+            background-color: var(--primary-dark);
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-        
+
         .stat-card {
             background-color: var(--white);
             border-radius: 10px;
@@ -83,7 +107,7 @@
             align-items: center;
             gap: 20px;
         }
-        
+
         .stat-icon {
             width: 50px;
             height: 50px;
@@ -93,18 +117,18 @@
             justify-content: center;
             font-size: 1.5rem;
         }
-        
+
         .stat-info h3 {
             font-size: 1.25rem;
             color: var(--dark);
             margin-bottom: 5px;
         }
-        
+
         .stat-info p {
             font-size: 0.875rem;
             color: var(--gray);
         }
-        
+
         .filter-section {
             background-color: var(--white);
             border-radius: 10px;
@@ -116,13 +140,13 @@
             gap: 15px;
             align-items: center;
         }
-        
+
         .filter-label {
             font-size: 0.875rem;
             font-weight: 600;
             color: var(--dark);
         }
-        
+
         .filter-select {
             padding: 8px 12px;
             border-radius: 6px;
@@ -132,7 +156,7 @@
             color: var(--dark);
             min-width: 150px;
         }
-        
+
         .search-box {
             padding: 8px 12px;
             border-radius: 6px;
@@ -145,26 +169,27 @@
             align-items: center;
             gap: 8px;
         }
-        
+
         .search-box input {
             border: none;
             outline: none;
             font-size: 0.875rem;
+            width: 100%;
         }
-        
+
         .consultorio-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
         }
-        
+
         .consultorio-card {
             background-color: var(--white);
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        
+
         .consultorio-header {
             display: flex;
             justify-content: space-between;
@@ -173,24 +198,24 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #e2e8f0;
         }
-        
+
         .consultorio-title {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .consultorio-icon {
             font-size: 1.25rem;
             color: var(--primary);
         }
-        
+
         .consultorio-name {
             font-size: 1.125rem;
             font-weight: 600;
             color: var(--dark);
         }
-        
+
         .consultorio-dept {
             font-size: 0.75rem;
             color: var(--gray);
@@ -198,30 +223,30 @@
             background-color: var(--light);
             border-radius: 4px;
         }
-        
+
         .equipment-list {
             list-style: none;
         }
-        
+
         .equipment-item {
             margin-bottom: 15px;
             padding-bottom: 15px;
             border-bottom: 1px solid #e2e8f0;
         }
-        
+
         .equipment-item:last-child {
             margin-bottom: 0;
             padding-bottom: 0;
             border-bottom: none;
         }
-        
+
         .equipment-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
-        
+
         .equipment-type {
             display: flex;
             align-items: center;
@@ -229,53 +254,58 @@
             font-weight: 600;
             color: var(--dark);
         }
-        
+
         .status-badge {
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 0.75rem;
             font-weight: 600;
         }
-        
-        .status-bueno {
+
+        .status-funcional {
             background-color: #dcfce7;
             color: #166534;
         }
-        
-        .status-perfecto {
-            background-color: #cffafe;
-            color: #155e75;
-        }
-        
-        .status-malo {
+
+        .status-no-funcional {
             background-color: #fee2e2;
             color: #991b1b;
         }
-        
+
+        .status-reparacion {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
         .equipment-components {
             font-size: 0.875rem;
             color: var(--gray);
             margin-bottom: 10px;
         }
-        
+
         .component-item {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 5px;
         }
-        
+
         .component-icon {
             width: 16px;
             height: 16px;
             color: var(--primary);
         }
-        
+
         .component-code {
             color: var(--dark);
             font-weight: 500;
         }
-        
+
+        .component-patrimonio {
+            font-style: italic;
+            color: #4b5563;
+        }
+
         .problem-section {
             background-color: #fff7ed;
             border-left: 3px solid var(--warning);
@@ -284,20 +314,68 @@
             font-size: 0.875rem;
             color: #9a3412;
         }
-        
-        /* Estilos para dispositivos móviles */
+
+        .report-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .report-content {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .report-content h2 {
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .chart-container {
+            margin-bottom: 20px;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
             }
-            
+
+            .action-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .action-button {
+                width: 100%;
+                text-align: center;
+            }
+
             .filter-section {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .search-box {
                 margin-left: 0;
                 width: 100%;
@@ -305,6 +383,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -317,53 +396,55 @@
                     <p>Policlínica Mcal López</p>
                 </div>
             </div>
+            <div class="action-buttons">
+                <button class="action-button" onclick="downloadPDF()">Descargar PDF</button>
+                <button class="action-button" onclick="downloadExcel()">Descargar Excel</button>
+                <button class="action-button" onclick="showReports()">Reportes Gráficos</button>
+            </div>
         </div>
-        
+
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-icon" style="background-color: #e0f2fe; color: #0369a1;">
                     <i class="fas fa-desktop"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>48</h3>
+                    <h3>11</h3>
                     <p>Equipos Totales</p>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon" style="background-color: #dcfce7; color: #166534;">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>32</h3>
+                    <h3>7</h3>
                     <p>Equipos Operativos</p>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon" style="background-color: #fee2e2; color: #991b1b;">
                     <i class="fas fa-exclamation-circle"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>16</h3>
-                    <p>Equipos con Problemas</p>
+                    <h3>3</h3>
+                    <p>Equipos No Funcionales</p>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon" style="background-color: #fef3c7; color: #92400e;">
                     <i class="fas fa-tools"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>5</h3>
-                    <p>En Mantenimiento</p>
+                    <h3>3</h3>
+                    <p>En Reparación</p>
                 </div>
             </div>
         </div>
-        
+
         <div class="filter-section">
             <div class="filter-label">Filtrar por:</div>
-            <select class="filter-select">
+            <select class="filter-select" id="filter-consultorio">
                 <option value="todos">Todos los Consultorios</option>
                 <option value="1">Consultorio 1</option>
                 <option value="2">Consultorio 2</option>
@@ -376,440 +457,937 @@
                 <option value="9">Consultorio 9</option>
                 <option value="10">Consultorio 10</option>
             </select>
-            
-            <select class="filter-select">
-                <option value="todos">Todas las Especialidades</option>
-                <option value="obstetricia">Obstetricia</option>
-                <option value="psicologia">Psicología</option>
-                <option value="clinica">Clínica Médica</option>
-                <option value="cardiologia">Cardiología</option>
+            <select class="filter-select" id="filter-responsable">
+                <option value="todos">Todos los Responsables</option>
+                <option value="Coordinación de la Clínica">Coordinación de la Clínica</option>
+                <option value="Consultas Varias">Consultas Varias</option>
+                <option value="Psicología">Psicología</option>
+                <option value="Libre">Libre</option>
+                <option value="Obstetricia">Obstetricia</option>
+                <option value="Enfermería">Enfermería</option>
             </select>
-            
-            <select class="filter-select">
+            <select class="filter-select" id="filter-estado">
                 <option value="todos">Todos los Estados</option>
-                <option value="bueno">Bueno</option>
-                <option value="perfecto">Perfecto</option>
-                <option value="malo">Malo</option>
+                <option value="En Funcionamiento">En Funcionamiento</option>
+                <option value="No Funcional">No Funcional</option>
             </select>
-            
             <div class="search-box">
                 <i class="fas fa-search" style="color: var(--gray);"></i>
-                <input type="text" placeholder="Buscar por código patrimonial...">
+                <input type="text" id="search-patrimonio" placeholder="Buscar por número de patrimonio...">
             </div>
         </div>
-        
-        <div class="consultorio-grid">
-            <!-- Consultorio 1 - Obstetricia -->
-            <div class="consultorio-card">
+
+        <div class="consultorio-grid" id="consultorio-grid">
+            <!-- Consultorio 1 -->
+            <div class="consultorio-card" data-consultorio="1" data-responsable="Coordinación de la Clínica"
+                data-estado="En Funcionamiento">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 1</div>
                     </div>
-                    <div class="consultorio-dept">Obstetricia</div>
+                    <div class="consultorio-dept">Coordinación de la Clínica</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-desktop" style="color: var(--primary);"></i>
-                                PC Desktop
-                            </div>
-                            <div class="status-badge status-bueno">Bueno</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-tv component-icon"></i>
-                                Monitor <span class="component-code">CP-MON-001</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-keyboard component-icon"></i>
-                                Teclado <span class="component-code">CP-TEC-001</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-001</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-001</span> <span
+                                    class="component-patrimonio">PAT-001</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-001</span> <span
+                                    class="component-patrimonio">PAT-002</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-001</span> <span
+                                    class="component-patrimonio">PAT-003</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-001</span> <span
+                                    class="component-patrimonio">PAT-004</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-001</span> <span
+                                    class="component-patrimonio">PAT-005</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-001</span> <span
+                                    class="component-patrimonio">PAT-006</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-001</span> <span
+                                    class="component-patrimonio">PAT-007</span></div>
                         </div>
-                        
-                        <div class="problem-section">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            El monitor presenta parpadeos ocasionales.
-                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
                     </li>
                 </ul>
             </div>
-            
-            <!-- Consultorio 2 - Psicología -->
-            <div class="consultorio-card">
+            <!-- Consultorio 2 (Equipo 1) -->
+            <div class="consultorio-card" data-consultorio="2" data-responsable="Consultas Varias"
+                data-estado="En Funcionamiento">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 2</div>
+                    </div>
+                    <div class="consultorio-dept">Consultas Varias</div>
+                </div>
+                <ul class="equipment-list">
+                    <li class="equipment-item">
+                        <div class="equipment-header">
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
+                        </div>
+                        <div class="equipment-components">
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-002</span> <span
+                                    class="component-patrimonio">PAT-008</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-002</span> <span
+                                    class="component-patrimonio">PAT-009</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-002</span> <span
+                                    class="component-patrimonio">PAT-010</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-002</span> <span
+                                    class="component-patrimonio">PAT-011</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-002</span> <span
+                                    class="component-patrimonio">PAT-012</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-002</span> <span
+                                    class="component-patrimonio">PAT-013</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-002</span> <span
+                                    class="component-patrimonio">PAT-014</span></div>
+                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
+                    </li>
+                </ul>
+            </div>
+            <!-- Consultorio 2 (Equipo 2) -->
+            <div class="consultorio-card" data-consultorio="2" data-responsable="Consultas Varias"
+                data-estado="En Funcionamiento">
+                <div class="consultorio-header">
+                    <div class="consultorio-title">
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
+                        <div class="consultorio-name">Consultorio 2</div>
+                    </div>
+                    <div class="consultorio-dept">Consultas Varias</div>
+                </div>
+                <ul class="equipment-list">
+                    <li class="equipment-item">
+                        <div class="equipment-header">
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
+                        </div>
+                        <div class="equipment-components">
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-002B</span> <span
+                                    class="component-patrimonio">PAT-015</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-002B</span> <span
+                                    class="component-patrimonio">PAT-016</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-002B</span> <span
+                                    class="component-patrimonio">PAT-017</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-002B</span> <span
+                                    class="component-patrimonio">PAT-018</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-002B</span> <span
+                                    class="component-patrimonio">PAT-019</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-002B</span> <span
+                                    class="component-patrimonio">PAT-020</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-002B</span> <span
+                                    class="component-patrimonio">PAT-021</span></div>
+                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
+                    </li>
+                </ul>
+            </div>
+            <!-- Consultorio 3 -->
+            <div class="consultorio-card" data-consultorio="3" data-responsable="Psicología"
+                data-estado="En Funcionamiento">
+                <div class="consultorio-header">
+                    <div class="consultorio-title">
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
+                        <div class="consultorio-name">Consultorio 3</div>
                     </div>
                     <div class="consultorio-dept">Psicología</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-laptop" style="color: var(--primary);"></i>
-                                Laptop
-                            </div>
-                            <div class="status-badge status-perfecto">Perfecto</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-002</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-003</span> <span
+                                    class="component-patrimonio">PAT-022</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-003</span> <span
+                                    class="component-patrimonio">PAT-023</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-003</span> <span
+                                    class="component-patrimonio">PAT-024</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-003</span> <span
+                                    class="component-patrimonio">PAT-025</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-003</span> <span
+                                    class="component-patrimonio">PAT-026</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-003</span> <span
+                                    class="component-patrimonio">PAT-027</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-003</span> <span
+                                    class="component-patrimonio">PAT-028</span></div>
+                            <div class="component-item"><i class="fas fa-mouse component-icon"></i>Mouse <span
+                                    class="component-code">CP-MOU-003</span> <span
+                                    class="component-patrimonio">PAT-029</span></div>
                         </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
                     </li>
                 </ul>
             </div>
-            
-            <!-- Consultorio 3 - Clínica Médica -->
-            <div class="consultorio-card">
+            <!-- Consultorio 4 -->
+            <div class="consultorio-card" data-consultorio="4" data-responsable="Libre" data-estado="No Funcional">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
-                        <div class="consultorio-name">Consultorio 3</div>
-                    </div>
-                    <div class="consultorio-dept">Clínica Médica</div>
-                </div>
-                
-                <ul class="equipment-list">
-                    <li class="equipment-item">
-                        <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-desktop" style="color: var(--primary);"></i>
-                                PC Desktop
-                            </div>
-                            <div class="status-badge status-malo">Malo</div>
-                        </div>
-                        
-                        <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-tv component-icon"></i>
-                                Monitor <span class="component-code">CP-MON-003</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-keyboard component-icon"></i>
-                                Teclado <span class="component-code">CP-TEC-003</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-003</span>
-                            </div>
-                        </div>
-                        
-                        <div class="problem-section">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            No enciende. Posible problema en la fuente de alimentación.
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            
-            <!-- Consultorio 4 - Cardiología -->
-            <div class="consultorio-card">
-                <div class="consultorio-header">
-                    <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 4</div>
                     </div>
-                    <div class="consultorio-dept">Cardiología</div>
+                    <div class="consultorio-dept">Libre</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-desktop" style="color: var(--primary);"></i>
-                                PC Desktop
-                            </div>
-                            <div class="status-badge status-bueno">Bueno</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-no-funcional">No Funcional</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-tv component-icon"></i>
-                                Monitor <span class="component-code">CP-MON-004</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-keyboard component-icon"></i>
-                                Teclado <span class="component-code">CP-TEC-004</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-004</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-004</span> <span
+                                    class="component-patrimonio">PAT-030</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-004</span> <span
+                                    class="component-patrimonio">PAT-031</span></div>
                         </div>
-                        
-                        <div class="problem-section">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            El teclado tiene varias teclas que no funcionan.
-                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
                     </li>
                 </ul>
             </div>
-            
             <!-- Consultorio 5 -->
-            <div class="consultorio-card">
+            <div class="consultorio-card" data-consultorio="5" data-responsable="Obstetricia"
+                data-estado="No Funcional">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 5</div>
                     </div>
                     <div class="consultorio-dept">Obstetricia</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-desktop" style="color: var(--primary);"></i>
-                                PC Desktop
-                            </div>
-                            <div class="status-badge status-perfecto">Perfecto</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-no-funcional">No Funcional</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-tv component-icon"></i>
-                                Monitor <span class="component-code">CP-MON-005</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-keyboard component-icon"></i>
-                                Teclado <span class="component-code">CP-TEC-005</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-005</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-005</span> <span
+                                    class="component-patrimonio">PAT-032</span></div>
                         </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Gestionar sus partes faltantes.</div>
                     </li>
                 </ul>
             </div>
-            
             <!-- Consultorio 6 -->
-            <div class="consultorio-card">
+            <div class="consultorio-card" data-consultorio="6" data-responsable="Libre" data-estado="No Funcional">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 6</div>
                     </div>
-                    <div class="consultorio-dept">Psicología</div>
+                    <div class="consultorio-dept">Libre</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-laptop" style="color: var(--primary);"></i>
-                                Laptop
-                            </div>
-                            <div class="status-badge status-malo">Malo</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-no-funcional">No Funcional</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-006</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-006</span> <span
+                                    class="component-patrimonio">PAT-033</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-006A</span> <span
+                                    class="component-patrimonio">PAT-034</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado Sobrante
+                                <span class="component-code">CP-TEC-006B</span> <span
+                                    class="component-patrimonio">PAT-035</span></div>
                         </div>
-                        
-                        <div class="problem-section">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            La pantalla está dañada, muestra líneas verticales.
-                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>En el lugar hay 2 teclados sobrantes</div>
                     </li>
                 </ul>
             </div>
-            
             <!-- Consultorio 7 -->
-            <div class="consultorio-card">
+            <div class="consultorio-card" data-consultorio="7" data-responsable="Enfermería"
+                data-estado="En Funcionamiento">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 7</div>
                     </div>
-                    <div class="consultorio-dept">Clínica Médica</div>
+                    <div class="consultorio-dept">Enfermería</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-desktop" style="color: var(--primary);"></i>
-                                PC Desktop
-                            </div>
-                            <div class="status-badge status-bueno">Bueno</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-tv component-icon"></i>
-                                Monitor <span class="component-code">CP-MON-007</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-keyboard component-icon"></i>
-                                Teclado <span class="component-code">CP-TEC-007</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-007</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-007</span> <span
+                                    class="component-patrimonio">PAT-036</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-007</span> <span
+                                    class="component-patrimonio">PAT-037</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-007</span> <span
+                                    class="component-patrimonio">PAT-038</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-007</span> <span
+                                    class="component-patrimonio">PAT-039</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-007</span> <span
+                                    class="component-patrimonio">PAT-040</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-007</span> <span
+                                    class="component-patrimonio">PAT-041</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-007</span> <span
+                                    class="component-patrimonio">PAT-042</span></div>
                         </div>
-                        
-                        <div class="problem-section">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            El sistema se reinicia ocasionalmente.
-                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
                     </li>
                 </ul>
             </div>
-            
-            <!-- Consultorio 8 -->
-            <div class="consultorio-card">
+            <!-- Consultorio 8 (Equipo 1) -->
+            <div class="consultorio-card" data-consultorio="8" data-responsable="Enfermería"
+                data-estado="En Funcionamiento">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 8</div>
                     </div>
-                    <div class="consultorio-dept">Cardiología</div>
+                    <div class="consultorio-dept">Enfermería</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-desktop" style="color: var(--primary);"></i>
-                                PC Desktop
-                            </div>
-                            <div class="status-badge status-perfecto">Perfecto</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-tv component-icon"></i>
-                                Monitor <span class="component-code">CP-MON-008</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-keyboard component-icon"></i>
-                                Teclado <span class="component-code">CP-TEC-008</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-008</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-008</span> <span
+                                    class="component-patrimonio">PAT-043</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-008</span> <span
+                                    class="component-patrimonio">PAT-044</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-008</span> <span
+                                    class="component-patrimonio">PAT-045</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-008</span> <span
+                                    class="component-patrimonio">PAT-046</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-008</span> <span
+                                    class="component-patrimonio">PAT-047</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-008</span> <span
+                                    class="component-patrimonio">PAT-048</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-008</span> <span
+                                    class="component-patrimonio">PAT-049</span></div>
                         </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
                     </li>
                 </ul>
             </div>
-            
-            <!-- Consultorio 9 -->
-            <div class="consultorio-card">
+            <!-- Consultorio 8 (Equipo 2) -->
+            <div class="consultorio-card" data-consultorio="8" data-responsable="Enfermería"
+                data-estado="En Funcionamiento">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
+                        <div class="consultorio-name">Consultorio 8</div>
+                    </div>
+                    <div class="consultorio-dept">Enfermería</div>
+                </div>
+                <ul class="equipment-list">
+                    <li class="equipment-item">
+                        <div class="equipment-header">
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
                         </div>
+                        <div class="equipment-components">
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-008B</span> <span
+                                    class="component-patrimonio">PAT-050</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-008B</span> <span
+                                    class="component-patrimonio">PAT-051</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-008B</span> <span
+                                    class="component-patrimonio">PAT-052</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-008B</span> <span
+                                    class="component-patrimonio">PAT-053</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-008B</span> <span
+                                    class="component-patrimonio">PAT-054</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-008B</span> <span
+                                    class="component-patrimonio">PAT-055</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-008B</span> <span
+                                    class="component-patrimonio">PAT-056</span></div>
+                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
+                    </li>
+                </ul>
+            </div>
+            <!-- Consultorio 9 -->
+            <div class="consultorio-card" data-consultorio="9" data-responsable="Libre" data-estado="En Funcionamiento">
+                <div class="consultorio-header">
+                    <div class="consultorio-title">
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 9</div>
                     </div>
-                    <div class="consultorio-dept">Obstetricia</div>
+                    <div class="consultorio-dept">Libre</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-laptop" style="color: var(--primary);"></i>
-                                Laptop
-                            </div>
-                            <div class="status-badge status-bueno">Bueno</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-009</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-009</span> <span
+                                    class="component-patrimonio">PAT-057</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-009</span> <span
+                                    class="component-patrimonio">PAT-058</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-009</span> <span
+                                    class="component-patrimonio">PAT-059</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-009</span> <span
+                                    class="component-patrimonio">PAT-060</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-009</span> <span
+                                    class="component-patrimonio">PAT-061</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-009</span> <span
+                                    class="component-patrimonio">PAT-062</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-009</span> <span
+                                    class="component-patrimonio">PAT-063</span></div>
                         </div>
-                        
-                        <div class="problem-section">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            La batería no retiene carga, siempre debe estar conectada.
-                        </div>
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
                     </li>
                 </ul>
             </div>
-            
             <!-- Consultorio 10 -->
-            <div class="consultorio-card">
+            <div class="consultorio-card" data-consultorio="10" data-responsable="Enfermería"
+                data-estado="En Funcionamiento">
                 <div class="consultorio-header">
                     <div class="consultorio-title">
-                        <div class="consultorio-icon">
-                            <i class="fas fa-door-open"></i>
-                        </div>
+                        <div class="consultorio-icon"><i class="fas fa-door-open"></i></div>
                         <div class="consultorio-name">Consultorio 10</div>
                     </div>
-                    <div class="consultorio-dept">Psicología</div>
+                    <div class="consultorio-dept">Enfermería</div>
                 </div>
-                
                 <ul class="equipment-list">
                     <li class="equipment-item">
                         <div class="equipment-header">
-                            <div class="equipment-type">
-                                <i class="fas fa-desktop" style="color: var(--primary);"></i>
-                                PC Desktop
-                            </div>
-                            <div class="status-badge status-bueno">Bueno</div>
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>PC
+                                Desktop</div>
+                            <div class="status-badge status-funcional">En Funcionamiento</div>
                         </div>
-                        
                         <div class="equipment-components">
-                            <div class="component-item">
-                                <i class="fas fa-tv component-icon"></i>
-                                Monitor <span class="component-code">CP-MON-010</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-keyboard component-icon"></i>
-                                Teclado <span class="component-code">CP-TEC-010</span>
-                            </div>
-                            <div class="component-item">
-                                <i class="fas fa-mouse component-icon"></i>
-                                Mouse <span class="component-code">CP-MOU-010</span>
-                            </div>
+                            <div class="component-item"><i class="fas fa-tv component-icon"></i>Monitor <span
+                                    class="component-code">CP-MON-010</span> <span
+                                    class="component-patrimonio">PAT-064</span></div>
+                            <div class="component-item"><i class="fas fa-plug component-icon"></i>Cable VGA Monitor
+                                <span class="component-code">CP-VGA-010</span> <span
+                                    class="component-patrimonio">PAT-065</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power
+                                Monitor <span class="component-code">CP-PWR-MON-010</span> <span
+                                    class="component-patrimonio">PAT-066</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU <span
+                                    class="component-code">CP-CPU-010</span> <span
+                                    class="component-patrimonio">PAT-067</span></div>
+                            <div class="component-item"><i class="fas fa-power-off component-icon"></i>Cable Power CPU
+                                <span class="component-code">CP-PWR-CPU-010</span> <span
+                                    class="component-patrimonio">PAT-068</span></div>
+                            <div class="component-item"><i class="fas fa-ethernet component-icon"></i>Cable de Red CPU
+                                <span class="component-code">CP-NET-010</span> <span
+                                    class="component-patrimonio">PAT-069</span></div>
+                            <div class="component-item"><i class="fas fa-keyboard component-icon"></i>Teclado <span
+                                    class="component-code">CP-TEC-010</span> <span
+                                    class="component-patrimonio">PAT-070</span></div>
                         </div>
-                        
+                        <div class="problem-section"><i class="fas fa-exclamation-triangle"
+                                style="margin-right: 5px;"></i>Cambiar Disco HHD a SSD (Mínimo requerido según
+                            relevamiento 250GB)</div>
+                    </li>
+                </ul>
+            </div>
+            <!-- En Reparación -->
+            <div class="consultorio-card" data-consultorio="reparacion"
+                data-responsable="Antonio Segovia - Hospital Central de IPS" data-estado="En Reparación">
+                <div class="consultorio-header">
+                    <div class="consultorio-title">
+                        <div class="consultorio-icon"><i class="fas fa-tools"></i></div>
+                        <div class="consultorio-name">Equipos en Reparación</div>
+                    </div>
+                    <div class="consultorio-dept">Mantenimiento</div>
+                </div>
+                <ul class="equipment-list">
+                    <li class="equipment-item">
+                        <div class="equipment-header">
+                            <div class="equipment-type"><i class="fas fa-desktop" style="color: var(--primary);"></i>CPU
+                                (3 Unidades)</div>
+                            <div class="status-badge status-reparacion">En Reparación</div>
+                        </div>
+                        <div class="equipment-components">
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU 1 <span
+                                    class="component-code">CP-CPU-REP-001</span> <span
+                                    class="component-patrimonio">PAT-071</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU 2 <span
+                                    class="component-code">CP-CPU-REP-002</span> <span
+                                    class="component-patrimonio">PAT-072</span></div>
+                            <div class="component-item"><i class="fas fa-desktop component-icon"></i>CPU 3 <span
+                                    class="component-code">CP-CPU-REP-003</span> <span
+                                    class="component-patrimonio">PAT-073</span></div>
+                        </div>
                         <div class="problem-section">
-                            <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
-                            El ventilador hace ruido excesivo.
+                            <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+                            Estado: Carga de Ofimáticas de IPS (SIH)<br>
+                            Fecha de Retiro: 3 de Abril de 2025<br>
+                            Fecha de Retorno: 23 de Abril de 2025<br>
+                            Responsable: Antonio Segovia - Hospital Central de IPS
                         </div>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
+
+    <div class="report-modal" id="report-modal">
+        <div class="report-content">
+            <span class="close-modal" onclick="closeReports()">&times;</span>
+            <h2>Reportes Gráficos</h2>
+            <div class="chart-container">
+                <canvas id="estadoChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="responsableChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data for filtering and exports
+        const consultoriosData = [
+            {
+                consultorio: "1",
+                responsable: "Coordinación de la Clínica",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-001", patrimonio: "PAT-001", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-001", patrimonio: "PAT-002", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-001", patrimonio: "PAT-003", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-001", patrimonio: "PAT-004", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-001", patrimonio: "PAT-005", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-001", patrimonio: "PAT-006", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-001", patrimonio: "PAT-007", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "2",
+                responsable: "Consultas Varias",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-002", patrimonio: "PAT-008", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-002", patrimonio: "PAT-009", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-002", patrimonio: "PAT-010", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-002", patrimonio: "PAT-011", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-002", patrimonio: "PAT-012", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-002", patrimonio: "PAT-013", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-002", patrimonio: "PAT-014", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "2",
+                responsable: "Consultas Varias",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-002B", patrimonio: "PAT-015", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-002B", patrimonio: "PAT-016", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-002B", patrimonio: "PAT-017", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-002B", patrimonio: "PAT-018", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-002B", patrimonio: "PAT-019", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-002B", patrimonio: "PAT-020", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-002B", patrimonio: "PAT-021", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "3",
+                responsable: "Psicología",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-003", patrimonio: "PAT-022", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-003", patrimonio: "PAT-023", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-003", patrimonio: "PAT-024", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-003", patrimonio: "PAT-025", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-003", patrimonio: "PAT-026", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-003", patrimonio: "PAT-027", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-003", patrimonio: "PAT-028", present: "Sí" },
+                    { name: "Mouse", code: "CP-MOU-003", patrimonio: "PAT-029", present: "Sí" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "4",
+                responsable: "Libre",
+                estado: "No Funcional",
+                components: [
+                    { name: "Monitor", code: "CP-MON-004", patrimonio: "PAT-030", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-004", patrimonio: "PAT-031", present: "Sí" },
+                    { name: "CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable Power CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable de Red CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Teclado", code: "", patrimonio: "", present: "No" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "5",
+                responsable: "Obstetricia",
+                estado: "No Funcional",
+                components: [
+                    { name: "Monitor", code: "CP-MON-005", patrimonio: "PAT-032", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable Power Monitor", code: "", patrimonio: "", present: "No" },
+                    { name: "CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable Power CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable de Red CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Teclado", code: "", patrimonio: "", present: "No" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Gestionar sus partes faltantes."
+            },
+            {
+                consultorio: "6",
+                responsable: "Libre",
+                estado: "No Funcional",
+                components: [
+                    { name: "Monitor", code: "CP-MON-006", patrimonio: "PAT-033", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable Power Monitor", code: "", patrimonio: "", present: "No" },
+                    { name: "CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable Power CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Cable de Red CPU", code: "", patrimonio: "", present: "No" },
+                    { name: "Teclado", code: "CP-TEC-006A", patrimonio: "PAT-034", present: "Sí" },
+                    { name: "Teclado Sobrante", code: "CP-TEC-006B", patrimonio: "PAT-035", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "En el lugar hay 2 teclados sobrantes"
+            },
+            {
+                consultorio: "7",
+                responsable: "Enfermería",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-007", patrimonio: "PAT-036", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-007", patrimonio: "PAT-037", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-007", patrimonio: "PAT-038", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-007", patrimonio: "PAT-039", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-007", patrimonio: "PAT-040", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-007", patrimonio: "PAT-041", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-007", patrimonio: "PAT-042", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "8",
+                responsable: "Enfermería",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-008", patrimonio: "PAT-043", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-008", patrimonio: "PAT-044", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-008", patrimonio: "PAT-045", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-008", patrimonio: "PAT-046", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-008", patrimonio: "PAT-047", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-008", patrimonio: "PAT-048", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-008", patrimonio: "PAT-049", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "8",
+                responsable: "Enfermería",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-008B", patrimonio: "PAT-050", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-008B", patrimonio: "PAT-051", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-008B", patrimonio: "PAT-052", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-008B", patrimonio: "PAT-053", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-008B", patrimonio: "PAT-054", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-008B", patrimonio: "PAT-055", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-008B", patrimonio: "PAT-056", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "9",
+                responsable: "Libre",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-009", patrimonio: "PAT-057", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-009", patrimonio: "PAT-058", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-009", patrimonio: "PAT-059", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-009", patrimonio: "PAT-060", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-009", patrimonio: "PAT-061", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-009", patrimonio: "PAT-062", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-009", patrimonio: "PAT-063", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "10",
+                responsable: "Enfermería",
+                estado: "En Funcionamiento",
+                components: [
+                    { name: "Monitor", code: "CP-MON-010", patrimonio: "PAT-064", present: "Sí" },
+                    { name: "Cable VGA Monitor", code: "CP-VGA-010", patrimonio: "PAT-065", present: "Sí" },
+                    { name: "Cable Power Monitor", code: "CP-PWR-MON-010", patrimonio: "PAT-066", present: "Sí" },
+                    { name: "CPU", code: "CP-CPU-010", patrimonio: "PAT-067", present: "Sí" },
+                    { name: "Cable Power CPU", code: "CP-PWR-CPU-010", patrimonio: "PAT-068", present: "Sí" },
+                    { name: "Cable de Red CPU", code: "CP-NET-010", patrimonio: "PAT-069", present: "Sí" },
+                    { name: "Teclado", code: "CP-TEC-010", patrimonio: "PAT-070", present: "Sí" },
+                    { name: "Mouse", code: "", patrimonio: "", present: "No" }
+                ],
+                observacion: "Cambiar Disco HHD a SSD (Mínimo requerido según relevamiento 250GB)"
+            },
+            {
+                consultorio: "reparacion",
+                responsable: "Antonio Segovia - Hospital Central de IPS",
+                estado: "En Reparación",
+                components: [
+                    { name: "CPU 1", code: "CP-CPU-REP-001", patrimonio: "PAT-071", present: "Sí" },
+                    { name: "CPU 2", code: "CP-CPU-REP-002", patrimonio: "PAT-072", present: "Sí" },
+                    { name: "CPU 3", code: "CP-CPU-REP-003", patrimonio: "PAT-073", present: "Sí" }
+                ],
+                observacion: "Estado: Carga de Ofimáticas de IPS (SIH), Fecha de Retiro: 3 de Abril de 2025, Fecha de Retorno: 23 de Abril de 2025, Responsable: Antonio Segovia - Hospital Central de IPS"
+            }
+        ];
+
+        // Filtering functionality
+        function applyFilters() {
+            const consultorioFilter = document.getElementById('filter-consultorio').value;
+            const responsableFilter = document.getElementById('filter-responsable').value;
+            const estadoFilter = document.getElementById('filter-estado').value;
+            const searchPatrimonio = document.getElementById('search-patrimonio').value.toLowerCase();
+
+            const cards = document.querySelectorAll('.consultorio-card');
+            cards.forEach(card => {
+                const consultorio = card.getAttribute('data-consultorio');
+                const responsable = card.getAttribute('data-responsable');
+                const estado = card.getAttribute('data-estado');
+                const components = card.querySelectorAll('.component-patrimonio');
+
+                let matchesSearch = searchPatrimonio === '';
+                if (!matchesSearch) {
+                    components.forEach(comp => {
+                        if (comp.textContent.toLowerCase().includes(searchPatrimonio)) {
+                            matchesSearch = true;
+                        }
+                    });
+                }
+
+                const showCard =
+                    (consultorioFilter === 'todos' || consultorio === consultorioFilter) &&
+                    (responsableFilter === 'todos' || responsable === responsableFilter) &&
+                    (estadoFilter === 'todos' || estado === estadoFilter) &&
+                    matchesSearch;
+
+                card.style.display = showCard ? '' : 'none';
+            });
+        }
+
+        document.getElementById('filter-consultorio').addEventListener('change', applyFilters);
+        document.getElementById('filter-responsable').addEventListener('change', applyFilters);
+        document.getElementById('filter-estado').addEventListener('change', applyFilters);
+        document.getElementById('search-patrimonio').addEventListener('input', applyFilters);
+
+        // Download PDF
+        function downloadPDF() {
+            const element = document.querySelector('.container');
+            const opt = {
+                margin: 0.5,
+                filename: 'Inventario_Equipos_Policlinica_Mcal_Lopez.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Download Excel
+        function downloadExcel() {
+            const data = consultoriosData.map(consultorio => {
+                const components = consultorio.components.reduce((acc, comp) => ({
+                    ...acc,
+                    [`${comp.name} Presente`]: comp.present,
+                    [`${comp.name} Código`]: comp.code,
+                    [`${comp.name} Patrimonio`]: comp.patrimonio
+                }), {});
+                return {
+                    Consultorio: consultorio.consultorio,
+                    Responsable: consultorio.responsable,
+                    Estado: consultorio.estado,
+                    Observación: consultorio.observacion,
+                    ...components
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
+            XLSX.writeFile(workbook, 'Inventario_Equipos_Policlinica_Mcal_Lopez.xlsx');
+        }
+
+        // Show Reports
+        let estadoChart, responsableChart;
+
+        function showReports() {
+            const modal = document.getElementById('report-modal');
+            modal.style.display = 'flex';
+
+            // Estado Chart
+            const estadoCounts = consultoriosData.reduce((acc, c) => {
+                acc[c.estado] = (acc[c.estado] || 0) + 1;
+                return acc;
+            }, {});
+
+            if (estadoChart) estadoChart.destroy();
+            estadoChart = new Chart(document.getElementById('estadoChart'), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(estadoCounts),
+                    datasets: [{
+                        data: Object.values(estadoCounts),
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Distribución por Estado' }
+                    }
+                }
+            });
+
+            // Responsable Chart
+            const responsableCounts = consultoriosData.reduce((acc, c) => {
+                acc[c.responsable] = (acc[c.responsable] || 0) + 1;
+                return acc;
+            }, {});
+
+            if (responsableChart) responsableChart.destroy();
+            responsableChart = new Chart(document.getElementById('responsableChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(responsableCounts),
+                    datasets: [{
+                        label: 'Equipos por Responsable',
+                        data: Object.values(responsableCounts),
+                        backgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Equipos por Responsable' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function closeReports() {
+            const modal = document.getElementById('report-modal');
+            modal.style.display = 'none';
+        }
+    </script>
 </body>
+
 </html>
